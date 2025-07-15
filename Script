@@ -158,7 +158,7 @@ dupeButton.MouseButton1Click:Connect(function()
 			if tool:IsA("Tool") then tool.Parent = character end
 		end
 
-		character.HumanoidRootPart.CFrame = CFrame.new(0, 10000, 0)
+		character.HumanoidRootPart.CFrame = CFrame.new(Vector3.new(699.92, 303.77, 354.01))
 
 		local timeout = 3
 		local start = tick()

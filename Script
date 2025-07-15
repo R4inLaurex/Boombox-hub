@@ -15,7 +15,7 @@ local theme = {
 
 
 local openSound = Instance.new("Sound", gui)
-openSound.SoundId = "rbxassetid://99232669270897" -- örnek bir UI tık sesi
+openSound.SoundId = "rbxassetid://99232669270897"
 openSound.Volume = 5
 
 

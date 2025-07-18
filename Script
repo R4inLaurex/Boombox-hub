@@ -101,6 +101,9 @@ for i, name in ipairs(tabs) do
 end
 
 
+local TweenService = game:GetService("TweenService")
+local player = game:GetService("Players").LocalPlayer
+
 local dupeFrame = tabFrames["Dupe"]
 
 local amountBox = Instance.new("TextBox", dupeFrame)
@@ -129,46 +132,49 @@ infoLabel.TextColor3 = theme.text
 infoLabel.TextScaled = true
 infoLabel.Font = Enum.Font.SourceSansBold
 infoLabel.Text = ""
+infoLabel.TextTransparency = 1
+
+local function animateText(text)
+	infoLabel.Text = text
+	local tweenIn = TweenService:Create(infoLabel, TweenInfo.new(0.25), {TextTransparency = 0})
+	local tweenOut = TweenService:Create(infoLabel, TweenInfo.new(0.25), {TextTransparency = 1})
+	tweenIn:Play()
+	tweenIn.Completed:Wait()
+	wait(0.25)
+	tweenOut:Play()
+end
 
 dupeButton.MouseButton1Click:Connect(function()
 	local amount = tonumber(amountBox.Text)
-	if not amount or amount <= 0 then
-		infoLabel.Text = "Enter Number."
-		return
-	end
+	if not amount or amount <= 0 then return end
 
-	local plr = player
-	local character = plr.Character
-	if not character or not character:FindFirstChild("HumanoidRootPart") then
-		infoLabel.Text = "Karakter bulunamadı."
-		return
-	end
+	local character = player.Character
+	if not character or not character:FindFirstChild("HumanoidRootPart") then return end
 
-	infoLabel.Text = "Duplama başlatıldı..."
-	local ogpos = character.HumanoidRootPart.Position
+	local originalPosition = character.HumanoidRootPart.Position
 
 	for i = 1, amount do
-		infoLabel.Text = " " .. i .. "/" .. amount
-		character:WaitForChild("HumanoidRootPart")
+		animateText(i .. "/" .. amount)
+		character = player.Character
 
-		for _, tool in pairs(plr.Backpack:GetChildren()) do
-			if tool:IsA("Tool") then tool.Parent = character end
-		end
-		for _, tool in pairs(character:GetChildren()) do
-			if tool:IsA("Tool") then tool.Parent = character end
+		for _, tool in pairs(player.Backpack:GetChildren()) do
+			if tool:IsA("Tool") then
+				tool.Parent = character
+			end
 		end
 
 		character.HumanoidRootPart.CFrame = CFrame.new(Vector3.new(-41.58, 587.77, 405.76))
 
 		local timeout = 3
 		local start = tick()
-		repeat task.wait() until not plr.Backpack:FindFirstChildOfClass("Tool") or tick() - start > timeout
+		repeat task.wait() until not player.Backpack:FindFirstChildOfClass("Tool") or tick() - start > timeout
+
 		task.wait(0.75)
 
-		for _, v in pairs(character:GetChildren()) do
-			if v:IsA("BasePart") then
-				v.CanCollide = false
-				v.Anchored = true
+		for _, part in pairs(character:GetChildren()) do
+			if part:IsA("BasePart") then
+				part.Anchored = true
+				part.CanCollide = false
 			end
 		end
 
@@ -179,21 +185,21 @@ dupeButton.MouseButton1Click:Connect(function()
 		end
 
 		character:BreakJoints()
-		plr.CharacterAdded:Wait()
-		character = plr.Character
+		player.CharacterAdded:Wait()
+		task.wait(1)
 	end
 
-	character:WaitForChild("HumanoidRootPart")
-	task.wait(0.15)
-	character.HumanoidRootPart.CFrame = CFrame.new(ogpos)
+	character = player.Character
+	character:WaitForChild("HumanoidRootPart").CFrame = CFrame.new(originalPosition)
 
 	for _, tool in pairs(workspace:GetChildren()) do
 		if tool:IsA("Tool") then
-			character.Humanoid:EquipTool(tool)
+			tool.Parent = character
+			task.wait(0.1)
 		end
 	end
 
-	infoLabel.Text = "Dup Done"
+	animateText("Dup Done")
 end)
 
 
@@ -333,9 +339,3 @@ if Client.Character and Client.Character:FindFirstChild("Humanoid") then
         ToggleButton.Text = "AntiFling OFF"
     end)
 end
---[[
-	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
-]]
-loadstring(game:HttpGet("https://pastebin.com/raw/LgZwZ7ZB",true))()
-
-

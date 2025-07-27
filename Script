@@ -100,7 +100,6 @@ for i, name in ipairs(tabs) do
     end)
 end
 
-
 local dupeFrame = tabFrames["Dupe"]
 
 local amountBox = Instance.new("TextBox", dupeFrame)
@@ -121,79 +120,75 @@ dupeButton.Font = Enum.Font.SourceSansBold
 dupeButton.BackgroundColor3 = theme.accent
 dupeButton.TextColor3 = theme.text
 
-local infoLabel = Instance.new("TextLabel", dupeFrame)
-infoLabel.Size = UDim2.new(1, 0, 0, 30)
-infoLabel.Position = UDim2.new(0, 0, 1, -30)
-infoLabel.BackgroundTransparency = 1
-infoLabel.TextColor3 = theme.text
-infoLabel.TextScaled = true
-infoLabel.Font = Enum.Font.SourceSansBold
-infoLabel.Text = ""
+local stealButton = Instance.new("TextButton", dupeFrame)
+stealButton.Text = "Steal Tool"
+stealButton.Size = UDim2.new(0, 125, 0, 35)
+stealButton.Position = UDim2.new(0, 30, 0, 105)
+stealButton.TextScaled = true
+stealButton.Font = Enum.Font.SourceSansBold
+stealButton.BackgroundColor3 = theme.accent
+stealButton.TextColor3 = theme.text
+
+local dropButton = Instance.new("TextButton", dupeFrame)
+dropButton.Text = "Drop Tool"
+dropButton.Size = UDim2.new(0, 125, 0, 35)
+dropButton.Position = UDim2.new(0, 165, 0, 105)
+dropButton.TextScaled = true
+dropButton.Font = Enum.Font.SourceSansBold
+dropButton.BackgroundColor3 = theme.accent
+dropButton.TextColor3 = theme.text
 
 dupeButton.MouseButton1Click:Connect(function()
 	local amount = tonumber(amountBox.Text)
-	if not amount or amount <= 0 then
-		infoLabel.Text = "Enter Number."
-		return
-	end
+	if not amount or amount <= 0 then return end
 
 	local plr = player
-	local character = plr.Character
-	if not character or not character:FindFirstChild("HumanoidRootPart") then
-		infoLabel.Text = "Karakter bulunamadı."
-		return
-	end
-
-	infoLabel.Text = "Duplama başlatıldı..."
-	local spawnCFrame = character:WaitForChild("HumanoidRootPart").CFrame
+	local character = plr.Character or plr.CharacterAdded:Wait()
+	local spawnCFrame = character.HumanoidRootPart.CFrame
 
 	for i = 1, amount do
-		infoLabel.Text = " " .. i .. "/" .. amount
-		character:WaitForChild("HumanoidRootPart")
+		for _, tool in ipairs(plr.Backpack:GetChildren()) do
+			if tool:IsA("Tool") then
+				tool.Parent = character
+			end
+		end
+
+		for _, tool in ipairs(character:GetChildren()) do
+			if tool:IsA("Tool") then
+				tool.Parent = character
+			end
+		end
+
+		local dropPos = Vector3.new(-41.58, 587.77, 405.76)
+		character:WaitForChild("HumanoidRootPart").CFrame = CFrame.new(dropPos)
+
+		task.wait(0.25)
+
+		for _, tool in ipairs(character:GetChildren()) do
+			if tool:IsA("Tool") and tool.Parent ~= workspace then
+				tool.Parent = workspace
+			end
+		end
+
+		local humanoid = character:FindFirstChildOfClass("Humanoid")
+		if humanoid then
+			humanoid:TakeDamage(9999)
+		else
+			character:BreakJoints()
+		end
+
+		character = plr.CharacterAdded:Wait()
+		repeat task.wait() until character:FindFirstChild("HumanoidRootPart") and character:FindFirstChildOfClass("Humanoid")
 
 		for _, tool in ipairs(plr.Backpack:GetChildren()) do
 			if tool:IsA("Tool") then
 				tool.Parent = character
-				task.wait(0.05)
-			end
-		end
-		for _, tool in ipairs(character:GetChildren()) do
-			if tool:IsA("Tool") then
-				tool.Parent = character
 			end
 		end
 
-		character.HumanoidRootPart.CFrame = CFrame.new(Vector3.new(-41.58, 587.77, 405.76))
-
-		local timeout = 3
-		local start = tick()
-		repeat task.wait() until not plr.Backpack:FindFirstChildOfClass("Tool") or tick() - start > timeout
-		task.wait(0.75)
-
-		for _, v in ipairs(character:GetChildren()) do
-			if v:IsA("BasePart") then
-				v.CanCollide = false
-				v.Anchored = true
-			end
-		end
-
-		for _, tool in ipairs(character:GetChildren()) do
-			if tool:IsA("Tool") then
-				tool.Parent = workspace
-				task.wait(0.05)
-			end
-		end
-
-		character:BreakJoints()
-		plr.CharacterAdded:Wait()
-		character = plr.Character
+		task.wait(0.15)
 	end
 
-	character:WaitForChild("HumanoidRootPart")
-	task.wait(0.15)
-	character.HumanoidRootPart.CFrame = spawnCFrame
-
-	-- TOOL TOPLAMA (tek tek üstlerine ışınlanma)
 	local tools = {}
 	for _, tool in ipairs(workspace:GetChildren()) do
 		if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
@@ -202,15 +197,67 @@ dupeButton.MouseButton1Click:Connect(function()
 	end
 
 	for _, tool in ipairs(tools) do
-		character.HumanoidRootPart.CFrame = tool.Handle.CFrame + Vector3.new(0, 3, 0)
-		local timeout = 2
-		local start = tick()
-		repeat task.wait(0.1) until not tool:IsDescendantOf(workspace) or tick() - start > timeout
+		local handle = tool:FindFirstChild("Handle")
+		if handle and character:FindFirstChild("HumanoidRootPart") then
+			local oldCFrame = character.HumanoidRootPart.CFrame
+			character.HumanoidRootPart.CFrame = handle.CFrame + Vector3.new(0, 3, 0)
+			task.wait(0.1)
+			character.HumanoidRootPart.CFrame = oldCFrame
+			task.wait(0.05)
+		end
 	end
 
-	character:WaitForChild("HumanoidRootPart").CFrame = spawnCFrame
+	if character:FindFirstChild("HumanoidRootPart") then
+		character.HumanoidRootPart.CFrame = spawnCFrame
+	end
 
-	infoLabel.Text = "Dup Done"
+	local done = Instance.new("TextLabel", dupeFrame)
+	done.Size = UDim2.new(1, 0, 0, 30)
+	done.Position = UDim2.new(0, 0, 1, -30)
+	done.BackgroundTransparency = 1
+	done.TextColor3 = theme.text
+	done.TextScaled = true
+	done.Font = Enum.Font.SourceSansBold
+	done.Text = "Dupe Done"
+	task.delay(2.5, function()
+		done:Destroy()
+	end)
+end)
+
+stealButton.MouseButton1Click:Connect(function()
+	local char = player.Character or player.CharacterAdded:Wait()
+
+	-- 1. Tüm tool'ları topla
+	for _, tool in ipairs(workspace:GetChildren()) do
+		if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
+			local handle = tool.Handle
+			local oldCFrame = char:WaitForChild("HumanoidRootPart").CFrame
+			char.HumanoidRootPart.CFrame = handle.CFrame + Vector3.new(0, 2, 0)
+			task.wait(0.15)
+			char.HumanoidRootPart.CFrame = oldCFrame
+			task.wait(0.05)
+		end
+	end
+
+	-- 2. Elindekini yere bırak
+	for _, tool in ipairs(char:GetChildren()) do
+		if tool:IsA("Tool") then
+			tool.Parent = workspace
+			break
+		end
+	end
+end)
+
+dropButton.MouseButton1Click:Connect(function()
+	local char = player.Character or player.CharacterAdded:Wait()
+
+	-- Tool'u sadece yere bırak, konum sabit
+	for _, tool in ipairs(char:GetChildren()) do
+		if tool:IsA("Tool") then
+			tool.Parent = workspace
+			break
+		end
+	end
 end)
 
 
@@ -318,7 +365,7 @@ ToggleButton.Position = UDim2.new(0, 20, 0, 20)
 ToggleButton.BackgroundColor3 = Color3.fromRGB(255,0,0)
 ToggleButton.TextColor3 = Color3.fromRGB(255,255,255)
 ToggleButton.Font = Enum.Font.SourceSansBold
-ToggleButton.TextSize = 20
+ToggleButton.TextSize = 15
 ToggleButton.Text = "AntiFling OFF"
 ToggleButton.Parent = ScreenGui
 
